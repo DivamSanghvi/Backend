@@ -54,7 +54,7 @@ const userSchema = new Schema(
 //bcrypt function is to encrypt the password
 userSchema.pre("save", async function () {
     if(!this.isModified(this.password)) return;  //isModified helps us to see if any field is modified
-    this.password=bcrypt.hash(this.password,10);   //here 10 is the amount of time hashing would be done
+    this.password=await bcrypt.hash(this.password,10);   //here 10 is the amount of time hashing would be done
     next();                                         //the flag is passed next
 })
 
