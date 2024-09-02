@@ -1,6 +1,7 @@
 import { Schema } from "mongoose"
 import mongoose from "mongoose"
 import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 
 const userSchema = new Schema(
     {
@@ -52,31 +53,40 @@ const userSchema = new Schema(
     }
 )
 //bcrypt function is to encrypt the password
-userSchema.pre("save", async function () {
-    if(!this.isModified(this.password)) return;  //isModified helps us to see if any field is modified
-    this.password=await bcrypt.hash(this.password,10);   //here 10 is the amount of time hashing would be done
-    next();                                         //the flag is passed next
-})
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    console.log("Password before hashing:", this.password); // Log the password before hashing
+    this.password = await bcrypt.hash(this.password, 10);
+    console.log("Password after hashing:", this.password); // Log the password after hashing
+    next();
+});
+
 
 //there are many methods in mongoose but to add one we have to do it as follows
-userSchema.methods.isPasswordCorrect= async function(password){
-    return await bcrypt.compare(password,this.password);
+userSchema.methods.isPasswordCorrect = async function(password){
+    return await bcrypt.compare(password, this.password)
 }
 
-userSchema.methods.generateAccessToken = function(){
-    return jwt.sign(
-        {
-            _id: this._id,         //sirf id daala toh bhi kaam ho jaata hai
-            email: this.email,     
-            username: this.username,
-            fullName: this.fullName
-        },
-        process.env.ACCESS_TOKEN_SECRET,   //the secret key goes here
-        {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY  //the expiry time goes here
-        }
-    )
+userSchema.methods.generateAccessToken = function() {
+    try {
+        return jwt.sign(
+            {
+                _id: this._id,
+                email: this.email,
+                username: this.username,
+                fullName: this.fullName
+            },
+            process.env.ACCESS_TOKEN_SECRET,
+            {
+                expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+            }
+        );
+    } catch (error) {
+        console.error("Error generating access token:", error);
+        throw new Error("Error generating access token");
+    }
 }
+
 
 userSchema.methods.generateRefreshToken = function(){
     return jwt.sign(

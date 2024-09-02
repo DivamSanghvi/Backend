@@ -8,8 +8,11 @@ import {uploadOnCloudinary} from '../utils/cloudinary.js'
 const generateAccessAndRefreshToken=async (userId)=>{
     try {
         const user=await User.findById(userId)
-        const accessToken=user.generateAccessToken
-        const refreshToken=user.generateRefreshToken
+        
+        const accessToken=user.generateAccessToken()
+        const refreshToken=user.generateRefreshToken()
+
+        console.log(accessToken)
 
         user.refreshToken=refreshToken
         await user.save({validateBeforeSave: false})
@@ -93,17 +96,14 @@ const loginUser = asyncHandler( async (req,res) => {
     //if exists check password validation
     //generate access and refresh token
     //send cookie
-
     const {email,username,password} = req.body
-
-    if(!username || !email){
+    if(!username && !email){
         throw new ApiError(400,"username or email is required")
     }
 
     const user=await User.findOne({
         $or:[{username},{email}]
     })
-
     if(!user){
         throw new ApiError(404,"user does not exist")
     }
@@ -113,7 +113,7 @@ const loginUser = asyncHandler( async (req,res) => {
     if(!isPasswordValid){
         throw new ApiError(401,"incorrect password")
     }
-
+    
     const {accessToken,refreshToken}=await generateAccessAndRefreshToken(user._id)
 
     const loggedInUser=await User.findById(user._id)
@@ -164,10 +164,8 @@ const logoutUser = asyncHandler(async (req,res)=>{
     .status(200)
     .clearCookie("accessToken",options)
     .clearCookie("refreshToken",options)
-    .json(new ApiResponse(200,{},"User Logged Out"))
-
+    .json(new ApiResponse(200,{},"User Logged out"))
 })
-
 
 export { registerUser, loginUser,logoutUser}
 
