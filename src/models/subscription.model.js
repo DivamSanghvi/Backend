@@ -1,4 +1,7 @@
 import mongoose, { Mongoose, Schema, model } from "mongoose"
+import { asyncHandler } from "../utils/asyncHandlers.js"
+import { User } from "./user.model.js"
+import { ApiError } from "../utils/ApiErrors"
 
 const subscriptionSchema = new Schema({
     subscriber :{
@@ -10,5 +13,7 @@ const subscriptionSchema = new Schema({
         ref:"User"
     }
 },{timestamps: true})
+
+
 
 export const Subscription = mongoose.model("Subscription",subscriptionSchema)
